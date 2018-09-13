@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Geo</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+  </head>
+  <body onload="getLocation();">
+
+        <div id="UFShortName"></div>
+        <div id="UFSLongName"></div>
+        <div id="CityShortName"></div>
+        <div id="CityLongName"></div>
+
+    <script>
+      function getLocation() {
+        navigator.geolocation.getCurrentPosition(initMap);
+      }
+
+      function initMap(position) {
+        $.ajax({
+        type: 'GET',
+        dataType: "json",
+        url: "https://maps.googleapis.com/maps/api/geocode/json?key=AIzaSyCSwj5N9c1YTkBPOHKiszkm6D0gfoTN12Q&latlng=" + position.coords.latitude + "," + position.coords.longitude + "&sensor=false",
+        data: {},
+        success: function (data) {
+
+            //$( "#state" ).html("<p>" + JSON.stringify(data['results']) + "</p>");
+
+            var city = $.grep(data['results'], function (e) { 
+                return e.types == "locality,political" 
+            });
+
+            var admArea = $.grep(data['results'], function (e) { 
+                return e.types == "administrative_area_level_2,political" 
+            });
+
+            var street_address = $.grep(data['results'], function (e) { 
+                return e.types == "street_address" 
+            });
+
+            var state = $.grep(street_address[0]['address_components'], function (e) { 
+                return e.types == "administrative_area_level_1,political" 
+            });
+
+            var _city = (city !== null && city.length > 0 && city[0].address_components !== null && city[0].address_components.length > 0) ? city : ((admArea !== null && admArea.length > 0 && admArea[0].address_components !== null && admArea[0].address_components.length > 0) ? admArea : null);
+
+            if (state !== null && state.length > 0) {
+                // $( "#state" ).html("<p>" + JSON.stringify(state) + "</p>");
+                var selectedUFShortName = state[0].short_name;
+                var selectedUFSLongName = state[0].long_name;
+                var selectedCityShortName = _city !== null ? _city[0].address_components[0].short_name : state[0].long_name;
+                var selectedCityLongName = _city !== null ? _city[0].address_components[0].long_name : state[0].long_name;
+
+                $( "#UFShortName" ).html("<p>UFShortName: " + selectedUFShortName + "</p>");
+                $( "#UFSLongName" ).html("<p>UFSLongName: " + selectedUFSLongName + "</p>");
+                $( "#CityShortName" ).html("<p>CityShortName: " + selectedCityShortName + "</p>");
+                $( "#CityLongName" ).html("<p>CityLongName: " + selectedCityLongName + "</p>");
+            }
+        },
+        error: function () {
+            alert("Erro!!!");
+        }
+    });
+
+      }
+    </script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+  </body>
+</html>
